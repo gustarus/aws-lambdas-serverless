@@ -1,0 +1,82 @@
+# {@see https://github.com/gustarus/aws-lambdas-serverless}
+# aws-guard-duty-message-to-fleep-webhook
+
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  StackDescription:
+    Type: String
+    Description: "Resource description to describe the stack and the lambda"
+
+  Topic:
+    Type: String
+    Default: ""
+    Description: "Guard duty source topic arn to listen for."
+
+  FleepWebhookUri:
+    Type: String
+    Default: "https://fleep.io/hook/abc"
+    Description: "Fleep webhook uri."
+
+  FleepMessageUser:
+    Type: String
+    Default: "Amazon Guard Duty"
+    Description: "Fleep message author."
+
+  FleepMessageTemplate:
+    Type: String
+    Default: "Finding detected: `${type}`. Go to ${urlToService}<<the guard duty service console>> for details. Check the finding type details in ${urlToDocs}<<aws docs>>."
+    Description: "Fleep message template."
+
+Conditions:
+  IsTopicDefined: !Not [!Equals [ !Ref "Topic", "" ] ]
+
+Resources:
+  Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref AWS::StackName
+      Description: !Ref StackDescription
+      Handler: index.handler
+      Runtime: "nodejs12.x"
+      CodeUri: dist
+      MemorySize: 128
+      Timeout: 300
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          FLEEP_CHANNEL_HOOK_URI: !Ref FleepWebhookUri
+          FLEEP_MESSAGE_SIGNATURE: !Ref FleepMessageUser
+          FLEEP_MESSAGE_TEMPLATE: !Ref FleepMessageTemplate
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: allow-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: arn:aws:logs:*:*:*
+
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Condition: IsTopicDefined
+    DependsOn: [Lambda]
+    Properties:
+      Protocol: "lambda"
+      Endpoint: !GetAtt "Lambda.Arn"
+      TopicArn: !Ref "Topic"

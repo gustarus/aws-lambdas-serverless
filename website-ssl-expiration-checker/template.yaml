@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  StackTitle:
+    Type: String
+    Default: "Website ssl expiration checker"
+    Description: "Resource title to prefix child resources"
+
+  StackDescription:
+    Type: String
+    Description: "Resource description to describe the stack and the lambda"
+
+  TargetDomains:
+    Type: String
+    Default: "kondratenko.me"
+    Description: "Target domains with comma separator."
+
+  ExpirationThreshold:
+    Type: Number
+    Default: 2851200
+    Description: "Expiration threshold in seconds when ssl certificate is about to expire"
+
+  TargetNotificationsTopics:
+    Type: List<String>
+    Default: ""
+    Description: "Simple notifications service topics arns"
+
+Conditions:
+  IsTargetNotificationsTopicsDefined: !Not [!Equals [ !Join [ ",", !Ref "TargetNotificationsTopics" ], "" ] ]
+
+Resources:
+  Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref AWS::StackName
+      Description: !Ref StackDescription
+      Handler: index.handler
+      Runtime: "nodejs12.x"
+      CodeUri: dist
+      MemorySize: 128
+      Timeout: 300
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TARGET_DOMAINS: !Ref TargetDomains
+          EXPIRATION_THRESHOLD: !Ref ExpirationThreshold
+
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "ScheduledRule"
+      ScheduleExpression: "rate(6 hours)"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt Lambda.Arn
+          Id: "TargetFunction"
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AWS::StackName
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ScheduledRule"
+          - "Arn"
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: allow-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: arn:aws:logs:*:*:*
+        - PolicyName: put-cw-data
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudwatch:PutMetricData'
+                Resource: '*'
+
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}"
+      RetentionInDays: 7
+
+  ExpirationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsTargetNotificationsTopicsDefined
+    Properties:
+      AlarmName: !Sub "${StackTitle} - Is about to expire"
+      AlarmDescription: "Alarm if lambda triggered an error."
+      AlarmActions: !Ref "TargetNotificationsTopics"
+      OKActions: !Ref "TargetNotificationsTopics"
+      Namespace: "AWS/Lambda"
+      MetricName: "Errors"
+      Dimensions:
+        - Name: "FunctionName"
+          Value: !Ref AWS::StackName
+      Statistic: "Maximum"
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      Threshold: 1
+      EvaluationPeriods: 1
+      Period: 86400
+      TreatMissingData: "breaching"

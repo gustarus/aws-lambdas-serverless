@@ -1,0 +1,25 @@
+{
+  "name": "guard-duty-message-to-fleep-webhook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proxy aws guard duty messages to a fleep channel.",
+  "author": "Pavel Kondratenko <gustarus@gmail.com>",
+  "main": "index.js",
+  "scripts": {
+    "prebuild": "npm run clean --silent || true",
+    "build": "mkdir -p dist && cp package*.json dist/ && ./node_modules/.bin/tsc && cd dist && npm ci --production",
+    "clean": "rm -r dist/*",
+    "deploy": "../deploy.sh"
+  },
+  "dependencies": {
+    "bunyan": "^1.8.14",
+    "ssl-checker": "^2.0.5",
+    "uuid": "^8.3.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.6",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.14.21",
+    "typescript": "^4.0.3"
+  }
+}
