@@ -107,7 +107,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: IsTargetNotificationsTopicsDefined
     Properties:
-      AlarmName: !Sub "${StackTitle} - Is about to expire"
+      AlarmName: !Sub "${StackTitle} - The ssl certificate is about to expire"
       AlarmDescription: "Alarm if lambda triggered an error."
       AlarmActions: !Ref "TargetNotificationsTopics"
       OKActions: !Ref "TargetNotificationsTopics"
