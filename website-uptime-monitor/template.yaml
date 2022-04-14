@@ -75,6 +75,12 @@ Resources:
                   - 'cloudwatch:PutMetricData'
                 Resource: '*'
 
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}"
+      RetentionInDays: 7
+
   ScheduledRule:
     Type: AWS::Events::Rule
     Properties:
