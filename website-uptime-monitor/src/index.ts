@@ -1,4 +1,4 @@
-import * as url from 'url';
+import axios from 'axios';
 import * as uuid from 'uuid';
 import * as Bunyan from 'bunyan';
 import { Context } from 'aws-lambda';
@@ -24,27 +24,11 @@ export async function handler(event: any, context: Context) {
   const log = logger.child({ requestId }, true);
   log.info({ event, context }, 'run');
 
-  // get target url details
-  const targetParsed = url.parse(targetUrl.trim());
-  const protocol = targetParsed.protocol.substring(0, targetParsed.protocol.length - 1);
-
-  // require related protocol module
-  const protocolModule = require(protocol);
-
   // send request from desired protocol module
   log.info(`Send request to url "${targetUrl.trim()}"`);
-  await new Promise((resolve, reject) => {
-    const request = protocolModule.request(targetParsed, (buffer) => {
-      const status = buffer.statusCode
-        ? parseInt(buffer.statusCode, 10) : undefined;
-      if (status !== 200) {
-        return reject(new Error(`Response returned invalid status code "${status}"`));
-      }
 
-      log.info('Server returned a valid status code');
-    });
-
-    request.on('error', reject);
-    request.end();
-  });
+  const response = await axios.get(targetUrl);
+  if (response.status !== 200) {
+    throw new Error(`Response returned invalid status code "${status}"`);
+  }
 }
