@@ -3,11 +3,11 @@ import { TMessage } from './types';
 import filter from './helpers/filter';
 import prepare from './helpers/prepare';
 import request from './helpers/request';
-import { FLEEP_CHANNEL_HOOK_URI, FLEEP_MESSAGE_MARKERS, FLEEP_MESSAGE_SIGNATURE, FLEEP_MESSAGE_TEMPLATE } from './constants';
+import { FLEEP_CHANNEL_HOOK_URL, FLEEP_MESSAGE_MARKERS, FLEEP_MESSAGE_SIGNATURE, FLEEP_MESSAGE_TEMPLATE } from './constants';
 
 const url = require('url');
 
-const hookUriParsed = url.parse(FLEEP_CHANNEL_HOOK_URI);
+const hookUriParsed = url.parse(FLEEP_CHANNEL_HOOK_URL);
 const hookUriProtocol = hookUriParsed.protocol.substring(0, hookUriParsed.protocol.length - 1);
 const hookUriProcessor = require(hookUriProtocol);
 

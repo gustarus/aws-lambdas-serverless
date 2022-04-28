@@ -1,5 +1,5 @@
 # {@see https://github.com/gustarus/aws-lambdas-serverless}
-# aws-guard-duty-message-to-fleep-webhook
+# simple-notifications-alarm-to-fleep-webhook
 
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
@@ -9,20 +9,20 @@ Parameters:
     Type: String
     Description: "Resource description to describe the stack and the lambda"
 
-  FleepWebhookUri:
+  FleepWebhookUrl:
     Type: String
     Default: "https://fleep.io/hook/abc"
-    Description: "Fleep webhook uri."
+    Description: "Fleep webhook url"
 
   FleepMessageUser:
     Type: String
     Default: "Amazon Cloud Watch"
-    Description: "Fleep message author."
+    Description: "Fleep message author"
 
   FleepMessageTemplate:
     Type: String
     Default: "${marker} *${title}* now is in `${state}` state. You can get more details about the alarm in ${url}<<aws cloud watch console>>."
-    Description: "Fleep message template."
+    Description: "Fleep message template"
 
 Resources:
   Lambda:
@@ -38,7 +38,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          FLEEP_CHANNEL_HOOK_URI: !Ref FleepWebhookUri
+          FLEEP_CHANNEL_HOOK_URL: !Ref FleepWebhookUrl
           FLEEP_MESSAGE_SIGNATURE: !Ref FleepMessageUser
           FLEEP_MESSAGE_TEMPLATE: !Ref FleepMessageTemplate
 
