@@ -1,0 +1,65 @@
+# {@see https://github.com/gustarus/aws-lambdas-serverless}
+# simple-notifications-alarm-to-teams-webhook
+
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  StackDescription:
+    Type: String
+    Description: "Resource description to describe the stack and the lambda"
+
+  AlarmUrlTemplate:
+    Type: String
+    Default: "https://${region}.console.aws.amazon.com/cloudwatch/home?region=${region}#alarmsV2:alarm/${code}"
+    Description: "Source alarm url template"
+
+  TeamsWebhookUrl:
+    Type: String
+    Default: "https://webhook.office.com/webhookb2/"
+    Description: "Teams webhook url"
+
+  TeamsMessageTemplate:
+    Type: String
+    Default: "${marker} *${title}* now is in `${state}` state. You can get more details about the alarm in [aws cloud watch console](${url})."
+    Description: "Teams message template"
+
+Resources:
+  Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref AWS::StackName
+      Description: !Ref StackDescription
+      Handler: index.handler
+      Runtime: "nodejs12.x"
+      CodeUri: dist
+      MemorySize: 128
+      Timeout: 300
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          ALARM_URL_TEMPLATE: !Ref AlarmUrlTemplate
+          TEAMS_CHANNEL_HOOK_URL: !Ref TeamsWebhookUrl
+          TEAMS_MESSAGE_TEMPLATE: !Ref TeamsMessageTemplate
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: allow-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: arn:aws:logs:*:*:*

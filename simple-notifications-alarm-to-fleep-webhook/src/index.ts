@@ -20,11 +20,11 @@ export async function handler(event: SNSEvent) {
     const marker = FLEEP_MESSAGE_MARKERS[message.state];
     const content = template
       .replace(/\\n/g, '\n')
-      .replace('${marker}', marker)
-      .replace('${state}', message.state)
-      .replace('${title}', message.title)
-      .replace('${description}', message.description)
-      .replace('${url}', message.url);
+      .replace(/\${marker}/g, marker)
+      .replace(/\${state}/g, message.state)
+      .replace(/\${title}/g, message.title)
+      .replace(/\${description}/g, message.description)
+      .replace(/\${url}/g, message.url);
     const data = { message: content, user: signature };
 
     const options = {

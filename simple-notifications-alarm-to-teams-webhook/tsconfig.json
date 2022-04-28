@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "module": "commonjs",
+    "target": "es2017",
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "strictNullChecks": false,
+    "outDir": "./dist",
+    "types": [
+      "node",
+      "mocha"
+    ],
+    "typeRoots": [
+      "types",
+      "node_modules/@types"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "./node_modules",
+    "./node_modules/*",
+    "./node_modules/@types/node/index.d.ts"
+  ]
+}
