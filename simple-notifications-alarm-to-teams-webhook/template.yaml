@@ -36,6 +36,8 @@ Resources:
       MemorySize: 128
       Timeout: 300
       Role: !GetAtt LambdaExecutionRole.Arn
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
       Environment:
         Variables:
           ALARM_URL_TEMPLATE: !Ref AlarmUrlTemplate
