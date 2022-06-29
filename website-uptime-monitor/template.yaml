@@ -17,7 +17,7 @@ Parameters:
     Description: "Website url to check the uptime status"
 
   TimeoutThreshold:
-    Type: String
+    Type: Number
     Default: 2222
     Description: "Lambda execution timeout threshold in milliseconds"
 
@@ -122,7 +122,7 @@ Resources:
       Statistic: "Maximum"
       ComparisonOperator: "GreaterThanOrEqualToThreshold"
       Threshold: 1
-      EvaluationPeriods: 1
+      EvaluationPeriods: 2
       Period: 180
       TreatMissingData: "breaching"
 
